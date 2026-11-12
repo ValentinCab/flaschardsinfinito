@@ -1,4 +1,4 @@
--- Propuesta para revisar y probar en un entorno aislado antes de aplicar.
+-- Migración aplicada: limit_workspace_members_and_isolate_hierarchy.
 -- La función serializa los ingresos por espacio y limita a dos integrantes.
 -- No modifica la versión publicada de la aplicación.
 begin;
@@ -56,4 +56,5 @@ alter table public.cards add constraint cards_deck_same_workspace
 
 revoke execute on function private.is_workspace_member(uuid) from public, anon;
 revoke execute on function private.is_workspace_owner(uuid) from public, anon;
+revoke update on public.workspace_members from authenticated;
 commit;
