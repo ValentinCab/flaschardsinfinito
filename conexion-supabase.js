@@ -1,4 +1,4 @@
-// Vista de prueba: autenticación y acceso a un espacio. La biblioteca local no se sincroniza aún.
+// Acceso y sincronización con Supabase.
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8/+esm';
 import { CloudLibrary } from './nube.mjs';
 const URL = 'https://jqhhwfnwvhdgjitzygsn.supabase.co';
@@ -64,6 +64,7 @@ button.onclick=showCloud;
 
 // La copia local original conserva su base de datos propia.
 let activeLibrary=null, queueTimer=null, inFlight=false, generation=0, synced=0, pendingKey='';
+const rememberedWorkspaceKey = userId => 'flash-last-workspace-'+userId;
 const localSave=save;
 let cloudStatus=document.createElement('span');cloudStatus.className='status';cloudStatus.style.margin='0 8px';button.after(cloudStatus);
 function status(message){cloudStatus.textContent=message;button.title=message}
@@ -95,14 +96,19 @@ async function openShared(space,session){
  try {
   let remote=await library.load();
   DB=dbName;state=remote;activeLibrary=library;
-  closeModal();await localSave();render();status('Sincronizado · '+space.name);
+  closeModal();await localSave();localStorage.setItem(rememberedWorkspaceKey(session.user.id),space.id);render();status('Sincronizado · '+space.name);
   button.textContent='☁ Biblioteca compartida';button.onclick=sharedMenu;
  } catch(e){status('No se pudo abrir la biblioteca');throw e}
 }
 function sharedMenu(){
- modal(`<div class="modal-title"><h2>Biblioteca compartida</h2><button class="x ghost" id="shared-close">×</button></div><p id="shared-status"></p><p class="hint">El contenido se comparte con el otro integrante. Tu progreso es individual.</p><button class="ghost" id="shared-retry">Reintentar sincronización</button> <button class="ghost" id="shared-refresh">Actualizar desde la nube</button><hr><p>Para importar desde la aplicación original, pegá el respaldo copiado desde Guardado. Se admite únicamente en un espacio vacío.</p><textarea id="shared-backup" placeholder="FLASH_INFINITO_V2…" style="width:100%;min-height:120px"></textarea><div class="modal-actions"><button class="add" id="shared-import">Importar respaldo</button></div>`);
+ modal(`<div class="modal-title"><h2>Biblioteca compartida</h2><button class="x ghost" id="shared-close">×</button></div><p id="shared-status"></p><p class="hint">El contenido se comparte con el otro integrante. Tu progreso es individual.</p><button class="ghost" id="shared-signout">Cerrar sesión</button> <button class="ghost" id="shared-retry">Reintentar sincronización</button> <button class="ghost" id="shared-refresh">Actualizar desde la nube</button><hr><p>Para importar desde la aplicación original, pegá el respaldo copiado desde Guardado. Se admite únicamente en un espacio vacío.</p><textarea id="shared-backup" placeholder="FLASH_INFINITO_V2…" style="width:100%;min-height:120px"></textarea><div class="modal-actions"><button class="add" id="shared-import">Importar respaldo</button></div>`);
  document.getElementById('shared-status').textContent=cloudStatus.textContent;
  document.getElementById('shared-close').onclick=closeModal;
+ document.getElementById('shared-signout').onclick=async e=>{e.target.disabled=true;try{
+  if(inFlight||synced<generation||localStorage.getItem(pendingKey))throw Error('Hay cambios sin sincronizar. Reintentá antes de cerrar sesión.');
+  const userId=activeLibrary.user;const {error}=await client.auth.signOut();if(error)throw error;
+  localStorage.removeItem(rememberedWorkspaceKey(userId));location.reload();
+ }catch(err){alert('No se pudo cerrar sesión: '+(err.message||err));e.target.disabled=false}};
  document.getElementById('shared-retry').onclick=()=>{status('Reintentando…');flush()};
  document.getElementById('shared-refresh').onclick=async e=>{e.target.disabled=true;try{
   if(inFlight||synced<generation)throw Error('Hay cambios pendientes. Esperá a que se sincronicen antes de actualizar.');
@@ -129,3 +135,21 @@ document.getElementById('backup').onclick=()=>{
  document.getElementById('backup-cloud-close').onclick=closeModal;
  document.getElementById('backup-cloud-copy').onclick=async()=>{try{await navigator.clipboard.writeText(field.value);toast('Respaldo copiado')}catch{field.select();toast('Copiá el texto seleccionado')}};
 };
+
+
+// Recordar únicamente el espacio de la cuenta autenticada; no guardar códigos de invitación.
+async function reopenLastWorkspace(){
+ try {
+  await window.flashAppReady;
+  const {data:{session},error}=await client.auth.getSession();
+  if(error)throw error;
+  if(!session)return;
+  const workspaceId=localStorage.getItem(rememberedWorkspaceKey(session.user.id));
+  if(!workspaceId)return;
+  const result=await client.from('workspaces').select('id,name').eq('id',workspaceId).maybeSingle();
+  if(result.error)throw result.error;
+  if(!result.data){localStorage.removeItem(rememberedWorkspaceKey(session.user.id));status('El espacio ya no está disponible');return;}
+  await openShared(result.data,session);
+ }catch(error){status('No se pudo abrir el espacio: '+(error.message||error));}
+}
+reopenLastWorkspace();
