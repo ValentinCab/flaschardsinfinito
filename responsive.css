@@ -1,0 +1,71 @@
+/* La biblioteca, el editor y el repaso comparten el espacio disponible. */
+html { -webkit-text-size-adjust: 100%; }
+.app { width: 100%; padding: clamp(12px, 2vw, 22px); }
+.top, .controls, .folder-title, .folder-actions, .deck-actions, .review-tools { min-width: 0; flex-wrap: wrap; }
+.brand { flex: 0 0 auto; }
+.controls { justify-content: flex-end; }
+.controls select { max-width: 100%; min-width: 0; }
+.folder-title > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+.folder-actions { margin-left: auto; }
+.folder, .mini, .modal, .study-card, .study-content, #review-content, .review-tools, .form-grid > * { min-width: 0; }
+.card-list { grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr)); align-items: stretch; }
+.mini { gap: 10px; padding: clamp(14px, 1.5vw, 20px); }
+.mini .text { display: block; overflow: visible; -webkit-line-clamp: unset; overflow-wrap: anywhere; word-break: normal; font-size: clamp(.98rem, 1.2vw, 1.08rem); line-height: 1.45; }
+.mini img { width: 100%; height: auto; max-height: 210px; object-fit: contain; object-position: center; }
+.mini-actions { flex-wrap: wrap; }
+.mini-actions button { min-height: 40px; padding: 8px 12px; }
+.review-layout > #review-content { width: min(1050px, 100%); }
+.study-card { height: auto; min-height: clamp(350px, 52svh, 560px); overflow: hidden; padding: 68px clamp(18px, 4vw, 48px) 32px; }
+.study-content { position: relative; gap: clamp(12px, 2vh, 20px); }
+.study-text { width: 100%; font-size: clamp(1.5rem, 3.5vw, 3.2rem); line-height: 1.2; letter-spacing: -.02em; overflow-wrap: anywhere; word-break: normal; }
+.study-card.has-img .study-text { font-size: clamp(1.35rem, 2.8vw, 2.7rem); }
+.study-card.has-img .study-image, .study-image { display: block; width: auto; max-width: 100%; max-height: min(38svh, 360px); height: auto; object-fit: contain; }
+.study-card.has-reference .study-content { padding-top: 0; }
+.question-reference { position: static; width: 100%; max-width: 100%; white-space: pre-wrap; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; font-size: clamp(.8rem, 1.1vw, .95rem); line-height: 1.4; }
+.label { top: 22px; left: clamp(18px, 3vw, 28px); }
+.review-edit { top: 15px; right: 15px; opacity: 1; }
+.grades { width: 100%; }
+.grades button { flex: 1 1 130px; min-height: 48px; }
+.modal { max-height: min(94vh, 94dvh); overscroll-behavior: contain; }
+.form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.field textarea { width: 100%; line-height: 1.4; }
+.preview { max-height: min(30vh, 220px); }
+@media (max-width: 700px) {
+ .top { align-items: flex-start; gap: 10px; }
+ .brand { flex: 1 1 100%; }
+ .controls { width: 100%; justify-content: flex-start; gap: 6px; }
+ .controls button { min-height: 40px; }
+ .controls select { flex: 1 1 140px; min-height: 40px; }
+ .folder { padding: 12px; }
+ .folder-title { align-items: flex-start; }
+ .folder-title > span:first-child { flex: 1 1 100%; }
+ .folder-actions { margin-left: 0; }
+ .deck-actions { justify-content: stretch; }
+ .deck-actions button { flex: 1 1 auto; }
+ .review-tools { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+ .review-tools button { min-width: 0; min-height: 44px; }
+ .review-tools .study-summary { grid-column: 1 / -1; overflow-wrap: anywhere; }
+ .studybar { position: static; flex-wrap: wrap; }
+ .study-card { min-height: min(48svh, 420px); border-radius: 19px; padding: 64px 18px 26px; }
+ .study-text { font-size: clamp(1.35rem, 6vw, 2.15rem); }
+ .study-card.has-img .study-text { font-size: clamp(1.25rem, 5vw, 1.8rem); }
+ .study-image, .study-card.has-img .study-image { max-height: min(34svh, 280px); }
+ .grades { gap: 7px; }
+ .grades button { flex: 1 1 0; min-width: 0; padding: 10px 4px; font-size: .82rem; }
+ .form-grid { grid-template-columns: minmax(0, 1fr); }
+ .form-grid > div:empty { display: none; }
+ .modal-back { padding: 8px; }
+ .modal { padding: 18px; border-radius: 16px; }
+ .modal-actions { flex-wrap: wrap; }
+ .field input, .field textarea, .field select { font-size: 16px; }
+}
+@media (max-width: 360px) {
+ .app { padding: 10px; }
+ .review-tools { grid-template-columns: minmax(0, 1fr); }
+ .review-tools .study-summary { grid-column: auto; }
+ .grades { flex-wrap: nowrap; }
+ .grade-error small, .grade-mid small, .grade-good small { font-size: .7rem; }
+}
+
+.controls .status, .study-summary { min-width: 0; overflow-wrap: anywhere; }
+.math { display: inline-block; max-width: 100%; overflow-x: auto; vertical-align: middle; }
