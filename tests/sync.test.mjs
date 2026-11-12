@@ -25,3 +25,8 @@ test('sincroniza cambios por objeto y detecta un conflicto remoto',async()=>{
 test('evita borrar una carpeta compartida mediante cascada',async()=>{
  let client=fake(),cloud=new CloudLibrary(client,'w','user');let state=await cloud.load();state.subjects=[{id:'s',name:'Materia'}];await cloud.save(state);state.subjects=[];await assert.rejects(cloud.save(state),/eliminación/);assert.equal(client.db.subjects.length,1);
 });
+test('carga la imagen en almacenamiento privado y la recupera al abrir',async()=>{
+ let client=fake(),objects=new Map();client.storage.from=()=>({upload:async(path,blob)=>{objects.set(path,blob);return {data:{path},error:null}},download:async path=>({data:objects.get(path),error:objects.has(path)?null:Error('No existe la imagen')})});
+ let old=globalThis.FileReader;globalThis.FileReader=class {readAsDataURL(blob){blob.arrayBuffer().then(b=>{this.result=`data:${blob.type};base64,${Buffer.from(b).toString('base64')}`;this.onload()}).catch(e=>{this.error=e;this.onerror()})}};
+ try{let first=new CloudLibrary(client,'w','u'),state=await first.load();state.subjects=[{id:'s',name:'Materia'}];state.folders=[{id:'f',name:'Grupo',subjectId:'s'}];state.decks=[{id:'d',name:'Mazo',folderId:'f'}];state.cards=[{id:'c',deckId:'d',front:'Texto',back:'Respuesta',frontImg:'data:image/png;base64,AQID',backImg:'',draft:false}];await first.save(state);assert.ok(client.db.cards[0].front.imagePath.startsWith('w/'));assert.equal(objects.size,1);let reopened=await new CloudLibrary(client,'w','u').load();assert.equal(reopened.cards[0].frontImg,'data:image/png;base64,AQID');}finally{globalThis.FileReader=old}
+});
